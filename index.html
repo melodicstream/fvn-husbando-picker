@@ -40,7 +40,7 @@
 
     <style>
         html {
-            overflow: hidden;
+            /* overflow: hidden; */
             height: 100%;
         }
 
@@ -49,7 +49,7 @@
         }
     </style>
 
-    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script>
         /*
          * Algorithm goes as follows:
@@ -64,12 +64,6 @@
          * Then it's just a matter of sorting.
          * If a husbando is unknown, then their entire row is set to 0.
         */
-
-        function getRandomInt(min, max) {
-            min = Math.ceil(min);
-            max = Math.floor(max);
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        }
 
         Vue.component('husbando-box', {
             template: `
@@ -98,51 +92,132 @@
 
         const app = new Vue({
             el: '#app',
-            data: {
-                husbandos: [
-                    {
-                        name: "Colby",
-                        sourceVisualNovel: "Four Letter Word",
-                        image: "img/flw_colby.png",
-                    },
-                    {
-                        name: "Asher",
-                        sourceVisualNovel: "Four Letter Word",
-                        image: "img/flw_asher.png",
-                    },
-                    {
-                        name: "Eli",
-                        sourceVisualNovel: "Four Letter Word",
-                        image: "img/flw_eli.png",
-                    },
-                    {
-                        name: "Hugh",
-                        sourceVisualNovel: "Four Letter Word",
-                        image: "img/flw_hugh.png",
-                    },
-                    {
-                        name: "Slade",
-                        sourceVisualNovel: "Four Letter Word",
-                        image: "img/flw_slade.png",
-                    },
-                ],
-                husbandoMatrix: [],
-                husbandoIndexLhs: 4,
-                husbandoIndexRhs: 3,
+            data: function () {
+                return {
+                    husbandos: [
+                        {
+                            name: "Colby",
+                            sourceVisualNovel: "Four Letter Word",
+                            image: "img/flw_colby.png",
+                        },
+                        {
+                            name: "Asher",
+                            sourceVisualNovel: "Four Letter Word",
+                            image: "img/flw_asher.png",
+                        },
+                        {
+                            name: "Eli",
+                            sourceVisualNovel: "Four Letter Word",
+                            image: "img/flw_eli.png",
+                        },
+                        {
+                            name: "Hugh",
+                            sourceVisualNovel: "Four Letter Word",
+                            image: "img/flw_hugh.png",
+                        },
+                        {
+                            name: "Slade",
+                            sourceVisualNovel: "Four Letter Word",
+                            image: "img/flw_slade.png",
+                        },
+                    ],
+                    husbandoMatrix: [],
+                    husbandoIndexLhs: 0,
+                    husbandoIndexRhs: 0,
+                }
             },
             methods: {
+
+                initializeHusbandoMatrix() {
+                    console.log("initializeHusbandoMatrix")
+
+                    const husbandoAmount = this.husbandos.length
+
+                    // Make the NxN 2D matrix full of -1
+                    let matrix = new Array(husbandoAmount).fill(0).map(() => new Array(husbandoAmount).fill(-1))
+
+                    // Fill the diagnonal with 0
+                    for (let i = 0; i < matrix.length; i++) {
+                        matrix[i][i] = 0
+                    }
+
+                    return matrix
+                },
+
                 onLike(side) {
-                    console.log('like from ' + side)
-                    this.randomizeHusbandoIndices()
+                    console.log('onLike ' + side)
+
+                    this.husbandos[this.husbandoIndexLhs][this.husbandoIndexRhs] = 1
+                    this.husbandos[this.husbandoIndexRhs][this.husbandoIndexLhs] = 0
+
+                    this.randomizeHusbandoIndex(side)
                 },
+
                 onDontKnow(side) {
-                    console.log('dontKnow from ' + side)
-                    this.randomizeHusbandoIndices()
+                    console.log('onDontKnow ' + side)
+
+                    const husbandoIndex = (side === "lhs") ? this.husbandoIndexLhs : this.husbandoIndexRhs
+
+                    // Fill the husbando row and column with 0
+                    // so that it doesn't get picked again
+                    // and so that the sum doesn't go up in the end
+                    for (let i = 0; i < this.husbandos.length; i++) {
+                        this.husbandos[husbandoIndex][i] = 0
+                        this.husbandos[i][husbandoIndex] = 0
+                    }
+
+                    this.randomizeHusbandoIndex(side)
                 },
-                randomizeHusbandoIndices() {
-                    this.husbandoIndexLhs = getRandomInt(0, this.husbandos.length - 1)
-                    this.husbandoIndexRhs = getRandomInt(0, this.husbandos.length - 1)
+
+                randomizeHusbandoIndex(side) {
+                    console.log("randomizeHusbandoIndex")
+
+                    const husbandoAmount = this.husbandos.length
+
+                    const oldIndex = this.husbandoIndexLhs
+                    const otherIndex = this.husbandoIndexRhs
+                    let newIndex = this.getRandomInt(0, husbandoAmount);
+
+                    while (false) {
+                        newIndex = this.getRandomInt(0, husbandoAmount)
+
+                        const isIndexEqualToOldIndex = newIndex === oldIndex
+                        const isIndexEqualToOtherIndex = newIndex === otherIndex
+
+                        if (isIndexEqualToOldIndex || isIndexEqualToOtherIndex) {
+                            continue
+                        }
+
+                        let canBeChosen = false
+                        for (let i = 0; i < husbandoAmount; i++) {
+                            if (this.husbandoMatrix[newIndex][i] !== 0) {
+                                canBeChosen = true
+                                break
+                            }
+                        }
+
+                        if (canBeChosen) {
+                            break
+                        }
+                    }
+
+                    this.husbandoIndexLhs = 0
                 },
+
+                getRandomInt(min, max) {
+                    min = Math.ceil(min)
+                    max = Math.floor(max)
+                    return Math.floor(Math.random() * (max - min)) + min
+                },
+
+            },
+            mounted() {
+                console.log("mounted")
+
+                this.husbandoMatrix = this.initializeHusbandoMatrix()
+
+                this.randomizeHusbandoIndex("lhs")
+                this.randomizeHusbandoIndex("rhs")
             },
         })
     </script>
