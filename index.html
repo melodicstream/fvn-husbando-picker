@@ -28,13 +28,13 @@
             <div class="columns">
                 <div class="column is-5">
                     <husbando-box
-                        v-bind="husbandos[0]"
-                    ></husbando-box>
+                        v-bind="husbandos[husbandoIndexLhs]">
+                    </husbando-box>
                 </div>
                 <div class="column is-5 is-offset-2">
                     <husbando-box
-                        v-bind="husbandos[1]"
-                    ></husbando-box>
+                        v-bind="husbandos[husbandoIndexRhs]">
+                    </husbando-box>
                 </div>
             </div>
         </div>
@@ -48,6 +48,20 @@
 
     <script src="https://cdn.jsdelivr.net/npm/vue"></script>
     <script>
+        /*
+         * Algorithm goes as follows:
+         * Have an NxN matrix called M, where each row and column represents a husbando
+         * Have it be filled out with -1, except the diagonal, which is 0
+         * There will be lots of comparisons between LHS and RHS husbando
+         * If LHS is liked more than RHS, then:
+         *  M[LHS][RHS] = 1
+         *  M[RHS][LHS] = 0
+         * That way, at the end of the comparisons, if you sum the rows, you'll have
+         * the number of times that a husbando was picked over another one.
+         * Then it's just a matter of sorting.
+         * If a husbando is unknown, then their entire row is set to 0.
+        */
+
         Vue.component('husbando-box', {
             template: `
             <div class="card">
@@ -59,15 +73,20 @@
                 <div class="card-content">
                     <div class="content">
                         <p class="title is-4">{{ name }} ({{ sourceVisualNovel }})</p>
-                        <button class="button">I like this one!</button>
+                        <button class="button">I like this one more!</button>
+                        <button class="button">I don't know this one!</button>
                     </div>
                 </div>
             </div>
             `,
-            props: ['name', 'sourceVisualNovel', 'image'],
+            props: {
+                name: String,
+                sourceVisualNovel: String,
+                image: String,
+            },
         })
 
-        var app = new Vue({
+        const app = new Vue({
             el: '#app',
             data: {
                 husbandos: [
@@ -81,7 +100,9 @@
                         sourceVisualNovel: "Four Letter Word",
                         image: "img/flw_asher.png",
                     },
-                ]
+                ],
+                husbandoIndexLhs: 0,
+                husbandoIndexRhs: 1,
             }
         })
     </script>
