@@ -28,12 +28,18 @@
             <div class="columns">
                 <div class="column is-5">
                     <husbando-box
-                        v-bind="husbandos[husbandoIndexLhs]">
+                        v-bind="husbandos[husbandoIndexLhs]"
+                        side="lhs"
+                        v-on:like="onLike"
+                        v-on:dont-know="onDontKnow">
                     </husbando-box>
                 </div>
                 <div class="column is-5 is-offset-2">
                     <husbando-box
-                        v-bind="husbandos[husbandoIndexRhs]">
+                        v-bind="husbandos[husbandoIndexRhs]"
+                        side="rhs"
+                        v-on:like="onLike"
+                        v-on:dont-know="onDontKnow">
                     </husbando-box>
                 </div>
             </div>
@@ -73,8 +79,8 @@
                 <div class="card-content">
                     <div class="content">
                         <p class="title is-4">{{ name }} ({{ sourceVisualNovel }})</p>
-                        <button class="button">I like this one more!</button>
-                        <button class="button">I don't know this one!</button>
+                        <button class="button" @click="$emit('like', side)">I like this one more!</button>
+                        <button class="button" @click="$emit('dont-know', side)">I don't know this one!</button>
                     </div>
                 </div>
             </div>
@@ -83,6 +89,7 @@
                 name: String,
                 sourceVisualNovel: String,
                 image: String,
+                side: String,
             },
         })
 
@@ -103,7 +110,15 @@
                 ],
                 husbandoIndexLhs: 0,
                 husbandoIndexRhs: 1,
-            }
+            },
+            methods: {
+                onLike(side) {
+                    console.log('like from ' + side)
+                },
+                onDontKnow(side) {
+                    console.log('dontKnow from ' + side)
+                },
+            },
         })
     </script>
 </body>
