@@ -8,18 +8,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.0/css/bulma.min.css">
 </head>
 
-<body>
-    <nav class="navbar" role="navigation" aria-label="main navigation">
+<body class="has-background-grey-darker">
+    <nav class="navbar has-background-info-dark" role="navigation" aria-label="main navigation">
         <div class="navbar-brand">
-            <h1 class="navbar-item">Furry Visual Novel Husbando Picker</h1>
-        </div>
-
-        <div id="navbar-menu" class="navbar-menu">
-            <div class="navbar-end">
-                <a class="navbar-item">
-                    About
-                </a>
-            </div>
+            <h1 class="navbar-item has-text-white-bis">Furry Visual Novel Husbando Picker</h1>
         </div>
     </nav>
 
@@ -49,6 +41,11 @@
     <style>
         html {
             overflow: hidden;
+            height: 100%;
+        }
+
+        body {
+            height: 100%;
         }
     </style>
 
@@ -67,6 +64,12 @@
          * Then it's just a matter of sorting.
          * If a husbando is unknown, then their entire row is set to 0.
         */
+
+        function getRandomInt(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
 
         Vue.component('husbando-box', {
             template: `
@@ -107,16 +110,38 @@
                         sourceVisualNovel: "Four Letter Word",
                         image: "img/flw_asher.png",
                     },
+                    {
+                        name: "Eli",
+                        sourceVisualNovel: "Four Letter Word",
+                        image: "img/flw_eli.png",
+                    },
+                    {
+                        name: "Hugh",
+                        sourceVisualNovel: "Four Letter Word",
+                        image: "img/flw_hugh.png",
+                    },
+                    {
+                        name: "Slade",
+                        sourceVisualNovel: "Four Letter Word",
+                        image: "img/flw_slade.png",
+                    },
                 ],
-                husbandoIndexLhs: 0,
-                husbandoIndexRhs: 1,
+                husbandoMatrix: [],
+                husbandoIndexLhs: 4,
+                husbandoIndexRhs: 3,
             },
             methods: {
                 onLike(side) {
                     console.log('like from ' + side)
+                    this.randomizeHusbandoIndices()
                 },
                 onDontKnow(side) {
                     console.log('dontKnow from ' + side)
+                    this.randomizeHusbandoIndices()
+                },
+                randomizeHusbandoIndices() {
+                    this.husbandoIndexLhs = getRandomInt(0, this.husbandos.length - 1)
+                    this.husbandoIndexRhs = getRandomInt(0, this.husbandos.length - 1)
                 },
             },
         })
