@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FVN Husbando Picker</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.0/css/bulma.min.css">
+</head>
+
+<body>
+    <nav class="navbar" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <h1 class="navbar-item">Furry Visual Novel Husbando Picker</h1>
+        </div>
+
+        <div id="navbar-menu" class="navbar-menu">
+            <div class="navbar-end">
+                <a class="navbar-item">
+                    About
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <section id="app" class="section">
+        <div class="container">
+            <div class="columns">
+                <div class="column is-5">
+                    <husbando-box
+                        v-bind="husbandos[0]"
+                    ></husbando-box>
+                </div>
+                <div class="column is-5 is-offset-2">
+                    <husbando-box
+                        v-bind="husbandos[1]"
+                    ></husbando-box>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <style>
+        html {
+            overflow: hidden;
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script>
+        Vue.component('husbando-box', {
+            template: `
+            <div class="card">
+                <div class="card-image">
+                    <figure class="image is-square">
+                        <img :src="image" :alt="name">
+                    </figure>
+                </div>
+                <div class="card-content">
+                    <div class="content">
+                        <p class="title is-4">{{ name }} ({{ sourceVisualNovel }})</p>
+                        <button class="button">I like this one!</button>
+                    </div>
+                </div>
+            </div>
+            `,
+            props: ['name', 'sourceVisualNovel', 'image'],
+        })
+
+        var app = new Vue({
+            el: '#app',
+            data: {
+                husbandos: [
+                    {
+                        name: "Colby",
+                        sourceVisualNovel: "Four Letter Word",
+                        image: "img/flw_colby.png",
+                    },
+                    {
+                        name: "Asher",
+                        sourceVisualNovel: "Four Letter Word",
+                        image: "img/flw_asher.png",
+                    },
+                ]
+            }
+        })
+    </script>
+</body>
+
+</html>
