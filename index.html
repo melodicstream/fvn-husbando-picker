@@ -64,7 +64,7 @@
                 </div>
             </div>
         </div>
-        <div class="container has-text-white-bis" id="husbando-result">
+        <div class="container" id="husbando-result">
         </div>
     </section>
 
@@ -208,9 +208,28 @@
 
                 rankedHusbandos = rankedHusbandos.map(([rank, index]) => index)
 
-                let rankedHusbandosHtml = ""
-                for (const index of rankedHusbandos) {
-                    rankedHusbandosHtml += `<p>${husbandos[index].name}</p>\n`
+                let rankedHusbandosHtml = `
+                    <div class="box has-text-centered">
+                        <p class="title">Results</p>
+                    </div>
+                `
+                for (const [rank, index] of rankedHusbandos.entries()) {
+                    rankedHusbandosHtml += `
+                        <div class="box">
+                            <div class="media">
+                                <div class="media-left">
+                                    <figure class="image is-48x48">
+                                        <img src="${husbandos[index].image}">
+                                    </figure>
+                                </div>
+                                <div class="media-content">
+                                    <p class="title is-4">${rank + 1} - ${husbandos[index].name}</p>
+                                    <p class="subtitle is-6">${husbandos[index].sourceVisualNovel}</p>
+                                </div>
+                            </div>
+                            <p></p>
+                        </div>
+                    `
                 }
 
                 document.getElementById("husbando-result").innerHTML = rankedHusbandosHtml
