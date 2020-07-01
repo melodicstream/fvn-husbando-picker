@@ -15,26 +15,48 @@
         </div>
     </nav>
 
-    <section id="app" class="section">
+    <section class="section">
         <div class="container">
             <div class="columns">
                 <div class="column is-5">
-                    <husbando-box
-                        v-bind="husbandos[husbandoIndexLhs]"
-                        side="lhs"
-                        v-on:like="onLike"
-                        v-on:dont-know="onDontKnow">
-                    </husbando-box>
+                    <div class="card" id="husbando-lhs">
+                        <div class="card-image">
+                            <figure class="image is-square">
+                                <img id="husbando-lhs-image" src="" alt="name">
+                            </figure>
+                        </div>
+                        <div class="card-content">
+                            <div class="content">
+                                <p class="title is-4" id="husbando-lhs-title"></p>
+                                <button class="button" onclick="onLike(0)">I like this one more!</button>
+                                <button class="button" onclick="onDontKnow(0)">I don't know this one!</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="column is-5 is-offset-2">
-                    <husbando-box
-                        v-bind="husbandos[husbandoIndexRhs]"
-                        side="rhs"
-                        v-on:like="onLike"
-                        v-on:dont-know="onDontKnow">
-                    </husbando-box>
+                    <div class="card" id="husbando-rhs">
+                        <div class="card-image">
+                            <figure class="image is-square">
+                                <img id="husbando-rhs-image" src="" alt="name">
+                            </figure>
+                        </div>
+                        <div class="card-content">
+                            <div class="content">
+                                <p class="title is-4" id="husbando-rhs-title"></p>
+                                <button class="button" onclick="onLike(1)">I like this one more!</button>
+                                <button class="button" onclick="onDontKnow(1)">I don't know this one!</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <p class="title has-text-white-bis" id="husbando-result"></p>
         </div>
     </section>
 
@@ -49,7 +71,6 @@
         }
     </style>
 
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script>
         /*
          * Algorithm goes as follows:
@@ -65,161 +86,189 @@
          * If a husbando is unknown, then their entire row is set to 0.
         */
 
-        Vue.component('husbando-box', {
-            template: `
-            <div class="card">
-                <div class="card-image">
-                    <figure class="image is-square">
-                        <img :src="image" :alt="name">
-                    </figure>
-                </div>
-                <div class="card-content">
-                    <div class="content">
-                        <p class="title is-4">{{ name }} ({{ sourceVisualNovel }})</p>
-                        <button class="button" @click="$emit('like', side)">I like this one more!</button>
-                        <button class="button" @click="$emit('dont-know', side)">I don't know this one!</button>
-                    </div>
-                </div>
-            </div>
-            `,
-            props: {
-                name: String,
-                sourceVisualNovel: String,
-                image: String,
-                side: String,
+        const husbandos = [
+            {
+                name: "Colby",
+                sourceVisualNovel: "Four Letter Word",
+                image: "img/flw_colby.png",
             },
-        })
+            {
+                name: "Asher",
+                sourceVisualNovel: "Four Letter Word",
+                image: "img/flw_asher.png",
+            },
+            {
+                name: "Eli",
+                sourceVisualNovel: "Four Letter Word",
+                image: "img/flw_eli.png",
+            },
+            {
+                name: "Hugh",
+                sourceVisualNovel: "Four Letter Word",
+                image: "img/flw_hugh.png",
+            },
+            {
+                name: "Slade",
+                sourceVisualNovel: "Four Letter Word",
+                image: "img/flw_slade.png",
+            },
+        ]
 
-        const app = new Vue({
-            el: '#app',
-            data: function () {
-                return {
-                    husbandos: [
-                        {
-                            name: "Colby",
-                            sourceVisualNovel: "Four Letter Word",
-                            image: "img/flw_colby.png",
-                        },
-                        {
-                            name: "Asher",
-                            sourceVisualNovel: "Four Letter Word",
-                            image: "img/flw_asher.png",
-                        },
-                        {
-                            name: "Eli",
-                            sourceVisualNovel: "Four Letter Word",
-                            image: "img/flw_eli.png",
-                        },
-                        {
-                            name: "Hugh",
-                            sourceVisualNovel: "Four Letter Word",
-                            image: "img/flw_hugh.png",
-                        },
-                        {
-                            name: "Slade",
-                            sourceVisualNovel: "Four Letter Word",
-                            image: "img/flw_slade.png",
-                        },
-                    ],
-                    husbandoMatrix: [],
-                    husbandoIndexLhs: 0,
-                    husbandoIndexRhs: 0,
+        let husbandoMatrix = []
+        let nonAvailableHusbandos = new Set()
+        // Index 0 is the LHS Husbando, and Index 1 is the RHS Husbando
+        let husbandoCardIndexes = [0, 1]
+        let areThereHusbandosLeft = true
+
+        function initializeHusbandoMatrix() {
+            console.log("initializeHusbandoMatrix")
+
+            const husbandoAmount = husbandos.length
+
+            // Make the NxN 2D matrix full of -1
+            let matrix = new Array(husbandoAmount).fill(0).map(() => new Array(husbandoAmount).fill(-1))
+
+            // Fill the diagnonal with 0
+            for (let i = 0; i < matrix.length; i++) {
+                matrix[i][i] = 0
+            }
+
+            return matrix
+        }
+
+        function onLike(side) {
+            console.log('onLike ' + side)
+
+            const husbandoIndexLhs = husbandoCardIndexes[0]
+            const husbandoIndexRhs = husbandoCardIndexes[1]
+
+            husbandoMatrix[husbandoIndexLhs][husbandoIndexRhs] = 1
+            husbandoMatrix[husbandoIndexRhs][husbandoIndexLhs] = 0
+
+            updateHusbandosState(side)
+        }
+
+        function onDontKnow(side) {
+            console.log('onDontKnow ' + side)
+
+            const husbandoIndex = husbandoCardIndexes[side]
+
+            // Fill the husbando row and column with 0
+            // so that it doesn't get picked again
+            // and so that the sum doesn't go up in the end
+            for (let i = 0; i < husbandos.length; i++) {
+                husbandoMatrix[husbandoIndex][i] = 0
+                husbandoMatrix[i][husbandoIndex] = 0
+            }
+
+            updateHusbandosState(side)
+        }
+
+        /**
+         * This function checks to see if any husbando got fully compared already.
+         * If it has, then it needs to add it to the nonAvailableHusbandos set.
+         *
+         * It also checks if all the husbandos have been compared. If that's the
+         * case, it will return true.
+         *
+         * Otherwise, it will randomize the husbando indexes and return false.
+         */
+        function updateHusbandosState(side) {
+
+            for (let i = 0; i < husbandoMatrix.length; i++) {
+                let available = false
+                for (let j = 0; j < husbandoMatrix.length; j++) {
+                    if (husbandoMatrix[i][j] === -1) {
+                        available = true
+                        break
+                    }
                 }
-            },
-            methods: {
 
-                initializeHusbandoMatrix() {
-                    console.log("initializeHusbandoMatrix")
+                if (!available) {
+                    nonAvailableHusbandos.add(i)
+                }
+            }
 
-                    const husbandoAmount = this.husbandos.length
+            areThereHusbandosLeft = nonAvailableHusbandos.size !== husbandos.length
 
-                    // Make the NxN 2D matrix full of -1
-                    let matrix = new Array(husbandoAmount).fill(0).map(() => new Array(husbandoAmount).fill(-1))
+            if (areThereHusbandosLeft) {
+                randomizeHusbandoIndex(side)
+            } else {
+                document.getElementById("husbando-result").textContent = "You Win!"
+            }
+        }
 
-                    // Fill the diagnonal with 0
-                    for (let i = 0; i < matrix.length; i++) {
-                        matrix[i][i] = 0
-                    }
+        function randomizeHusbandoIndex(side) {
+            // Randomize current side first, then check to see if the other side
+            // has an available husbando. If no, then randomize the other side.
+            randomizeHusbandoSide(side)
 
-                    return matrix
-                },
+            const husbandoOtherSide = husbandoCardIndexes[1 - side]
 
-                onLike(side) {
-                    console.log('onLike ' + side)
+            const husbandoIsAvailable = !nonAvailableHusbandos.has(husbandoOtherSide)
 
-                    this.husbandos[this.husbandoIndexLhs][this.husbandoIndexRhs] = 1
-                    this.husbandos[this.husbandoIndexRhs][this.husbandoIndexLhs] = 0
+            if (!husbandoIsAvailable) {
+                randomizeHusbandoSide(1 - side)
+            }
 
-                    this.randomizeHusbandoIndex(side)
-                },
+            updateHusbandoCards()
+        }
 
-                onDontKnow(side) {
-                    console.log('onDontKnow ' + side)
+        function randomizeHusbandoSide(side) {
+            console.log("randomizeHusbandoIndex")
 
-                    const husbandoIndex = (side === "lhs") ? this.husbandoIndexLhs : this.husbandoIndexRhs
+            const husbandoAmount = husbandos.length
 
-                    // Fill the husbando row and column with 0
-                    // so that it doesn't get picked again
-                    // and so that the sum doesn't go up in the end
-                    for (let i = 0; i < this.husbandos.length; i++) {
-                        this.husbandos[husbandoIndex][i] = 0
-                        this.husbandos[i][husbandoIndex] = 0
-                    }
+            const oldIndex = husbandoCardIndexes[side]
+            const otherIndex = husbandoCardIndexes[1 - side]
 
-                    this.randomizeHusbandoIndex(side)
-                },
+            // This is all the non available husbandos, plus the two currently selected husbandos
+            const allNonAvailableHusbandos = new Set([...nonAvailableHusbandos]).add(oldIndex).add(otherIndex)
 
-                randomizeHusbandoIndex(side) {
-                    console.log("randomizeHusbandoIndex")
+            const availableHusbandos = Array.from(Array(husbandoAmount).keys())
+                // Subtract non available husbandos from all the husbandos
+                .filter(x => !allNonAvailableHusbandos.has(x))
+                // Subtract any husbandos that have been paired with the otherIndex
+                .filter(x => husbandoMatrix[x][otherIndex] === -1)
 
-                    const husbandoAmount = this.husbandos.length
+            shuffleArray(availableHusbandos)
 
-                    const oldIndex = this.husbandoIndexLhs
-                    const otherIndex = this.husbandoIndexRhs
-                    let newIndex = this.getRandomInt(0, husbandoAmount);
+            if (availableHusbandos.length !== 0) {
+                husbandoCardIndexes[side] = availableHusbandos[0]
+            }
+        }
 
-                    while (false) {
-                        newIndex = this.getRandomInt(0, husbandoAmount)
+        function updateHusbandoCards() {
+            const husbandoIndexLhs = husbandoCardIndexes[0]
+            const husbandoIndexRhs = husbandoCardIndexes[1]
 
-                        const isIndexEqualToOldIndex = newIndex === oldIndex
-                        const isIndexEqualToOtherIndex = newIndex === otherIndex
+            console.log('husbandoIndexLhs ' + husbandoCardIndexes[0])
+            console.log('husbandoIndexRhs ' + husbandoCardIndexes[1])
 
-                        if (isIndexEqualToOldIndex || isIndexEqualToOtherIndex) {
-                            continue
-                        }
+            document.getElementById("husbando-lhs-title").textContent = `${husbandos[husbandoIndexLhs].name} (${husbandos[husbandoIndexLhs].sourceVisualNovel})`
+            document.getElementById("husbando-lhs-image").src = husbandos[husbandoIndexLhs].image
+            document.getElementById("husbando-lhs-image").alt = husbandos[husbandoIndexLhs].name
 
-                        let canBeChosen = false
-                        for (let i = 0; i < husbandoAmount; i++) {
-                            if (this.husbandoMatrix[newIndex][i] !== 0) {
-                                canBeChosen = true
-                                break
-                            }
-                        }
+            document.getElementById("husbando-rhs-title").textContent = `${husbandos[husbandoIndexRhs].name} (${husbandos[husbandoIndexRhs].sourceVisualNovel})`
+            document.getElementById("husbando-rhs-image").src = husbandos[husbandoIndexRhs].image
+            document.getElementById("husbando-rhs-image").alt = husbandos[husbandoIndexRhs].name
+        }
 
-                        if (canBeChosen) {
-                            break
-                        }
-                    }
+        function shuffleArray(a) {
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [ a[i], a[j] ] = [a[j], a[i]]
+            }
+            return a
+        }
 
-                    this.husbandoIndexLhs = 0
-                },
+        window.onload = () => {
+            husbandoMatrix = initializeHusbandoMatrix()
 
-                getRandomInt(min, max) {
-                    min = Math.ceil(min)
-                    max = Math.floor(max)
-                    return Math.floor(Math.random() * (max - min)) + min
-                },
+            randomizeHusbandoIndex(0)
+            randomizeHusbandoIndex(1)
+        }
 
-            },
-            mounted() {
-                console.log("mounted")
-
-                this.husbandoMatrix = this.initializeHusbandoMatrix()
-
-                this.randomizeHusbandoIndex("lhs")
-                this.randomizeHusbandoIndex("rhs")
-            },
-        })
     </script>
 </body>
 
