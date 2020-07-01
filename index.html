@@ -17,9 +17,21 @@
 
     <section class="section">
         <div class="container">
+            <div class="box">
+                <p>
+                    Welcome to the Furry Visual Novel Husbando Picker! The way this works is that you're presented with
+                    two characters from Furry Visual Novels at once. You must decide which one of the two you like the
+                    most. This will go on until you're rated all the characters. Once that is done, you'll be able to
+                    see your ranking of husbandos, with the top one being the one that you love the most. Refresh the
+                    page to try again if you'd like.
+                </p>
+            </div>
+        </div>
+        <br/>
+        <div class="container" id="husbando-app">
             <div class="columns">
                 <div class="column is-5">
-                    <div class="card" id="husbando-lhs">
+                    <div class="box" id="husbando-lhs">
                         <div class="card-image">
                             <figure class="image is-square">
                                 <img id="husbando-lhs-image" src="" alt="name">
@@ -35,7 +47,7 @@
                     </div>
                 </div>
                 <div class="column is-5 is-offset-2">
-                    <div class="card" id="husbando-rhs">
+                    <div class="box" id="husbando-rhs">
                         <div class="card-image">
                             <figure class="image is-square">
                                 <img id="husbando-rhs-image" src="" alt="name">
@@ -52,22 +64,20 @@
                 </div>
             </div>
         </div>
-    </section>
-
-    <section class="section">
-        <div class="container">
-            <p class="title has-text-white-bis" id="husbando-result"></p>
+        <div class="container has-text-white-bis" id="husbando-result">
         </div>
     </section>
 
     <style>
         html {
-            /* overflow: hidden; */
-            height: 100%;
+            overflow: auto;
+            min-height: 100vh;
         }
 
         body {
-            height: 100%;
+            margin: 0px;
+            padding: 0px;
+            min-height: 100vh;
         }
     </style>
 
@@ -121,8 +131,6 @@
         let areThereHusbandosLeft = true
 
         function initializeHusbandoMatrix() {
-            console.log("initializeHusbandoMatrix")
-
             const husbandoAmount = husbandos.length
 
             // Make the NxN 2D matrix full of -1
@@ -137,10 +145,8 @@
         }
 
         function onLike(side) {
-            console.log('onLike ' + side)
-
-            const husbandoIndexLhs = husbandoCardIndexes[0]
-            const husbandoIndexRhs = husbandoCardIndexes[1]
+            const husbandoIndexLhs = husbandoCardIndexes[side]
+            const husbandoIndexRhs = husbandoCardIndexes[1 - side]
 
             husbandoMatrix[husbandoIndexLhs][husbandoIndexRhs] = 1
             husbandoMatrix[husbandoIndexRhs][husbandoIndexLhs] = 0
@@ -149,8 +155,6 @@
         }
 
         function onDontKnow(side) {
-            console.log('onDontKnow ' + side)
-
             const husbandoIndex = husbandoCardIndexes[side]
 
             // Fill the husbando row and column with 0
@@ -194,7 +198,22 @@
             if (areThereHusbandosLeft) {
                 randomizeHusbandoIndex(side)
             } else {
-                document.getElementById("husbando-result").textContent = "You Win!"
+                // The ranking has conclused, so show results
+                console.log("Ranking finished")
+                document.getElementById("husbando-app").style.display = "none"
+
+                let rankedHusbandos = husbandoMatrix.map((husbando, index) => [husbando.reduce((a, b) => a + b, 0), index])
+
+                rankedHusbandos.sort(([rank1, index1], [rank2, index2]) => rank1 < rank2)
+
+                rankedHusbandos = rankedHusbandos.map(([rank, index]) => index)
+
+                let rankedHusbandosHtml = ""
+                for (const index of rankedHusbandos) {
+                    rankedHusbandosHtml += `<p>${husbandos[index].name}</p>\n`
+                }
+
+                document.getElementById("husbando-result").innerHTML = rankedHusbandosHtml
             }
         }
 
@@ -215,8 +234,6 @@
         }
 
         function randomizeHusbandoSide(side) {
-            console.log("randomizeHusbandoIndex")
-
             const husbandoAmount = husbandos.length
 
             const oldIndex = husbandoCardIndexes[side]
@@ -242,9 +259,6 @@
             const husbandoIndexLhs = husbandoCardIndexes[0]
             const husbandoIndexRhs = husbandoCardIndexes[1]
 
-            console.log('husbandoIndexLhs ' + husbandoCardIndexes[0])
-            console.log('husbandoIndexRhs ' + husbandoCardIndexes[1])
-
             document.getElementById("husbando-lhs-title").textContent = `${husbandos[husbandoIndexLhs].name} (${husbandos[husbandoIndexLhs].sourceVisualNovel})`
             document.getElementById("husbando-lhs-image").src = husbandos[husbandoIndexLhs].image
             document.getElementById("husbando-lhs-image").alt = husbandos[husbandoIndexLhs].name
@@ -257,7 +271,7 @@
         function shuffleArray(a) {
             for (let i = a.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [ a[i], a[j] ] = [a[j], a[i]]
+                [a[i], a[j]] = [a[j], a[i]]
             }
             return a
         }
