@@ -94,7 +94,9 @@
          * the number of times that a husbando was picked over another one.
          * Then it's just a matter of sorting.
          * If a husbando is unknown, then their entire row is set to 0.
-        */
+         * Additionally, if there are husbandos A, B, C and you say that A > B
+         * and B > C, it will assume that A > C and not show you the comparison.
+         */
 
         const husbandos = [
             {
@@ -128,7 +130,6 @@
         let nonAvailableHusbandos = new Set()
         // Index 0 is the LHS Husbando, and Index 1 is the RHS Husbando
         let husbandoCardIndexes = [0, 1]
-        let areThereHusbandosLeft = true
 
         function initializeHusbandoMatrix() {
             const husbandoAmount = husbandos.length
@@ -171,68 +172,82 @@
         /**
          * This function checks to see if any husbando got fully compared already.
          * If it has, then it needs to add it to the nonAvailableHusbandos set.
-         *
-         * It also checks if all the husbandos have been compared. If that's the
-         * case, it will return true.
-         *
-         * Otherwise, it will randomize the husbando indexes and return false.
          */
         function updateHusbandosState(side) {
 
-            for (let i = 0; i < husbandoMatrix.length; i++) {
-                let available = false
-                for (let j = 0; j < husbandoMatrix.length; j++) {
-                    if (husbandoMatrix[i][j] === -1) {
-                        available = true
-                        break
-                    }
-                }
+            updateHusbandoAvailability()
 
-                if (!available) {
-                    nonAvailableHusbandos.add(i)
-                }
-            }
+            updateHusbandoTransitivity()
 
-            areThereHusbandosLeft = nonAvailableHusbandos.size !== husbandos.length
+            const areThereHusbandosLeft = nonAvailableHusbandos.size !== husbandos.length
 
             if (areThereHusbandosLeft) {
                 randomizeHusbandoIndex(side)
             } else {
-                // The ranking has conclused, so show results
-                console.log("Ranking finished")
-                document.getElementById("husbando-app").style.display = "none"
+                showResults()
+            }
+        }
 
-                let rankedHusbandos = husbandoMatrix.map((husbando, index) => [husbando.reduce((a, b) => a + b, 0), index])
-
-                rankedHusbandos.sort(([rank1, index1], [rank2, index2]) => rank1 < rank2)
-
-                rankedHusbandos = rankedHusbandos.map(([rank, index]) => index)
-
-                let rankedHusbandosHtml = `
-                    <div class="box has-text-centered">
-                        <p class="title">Results</p>
-                    </div>
-                `
-                for (const [rank, index] of rankedHusbandos.entries()) {
-                    rankedHusbandosHtml += `
-                        <div class="box">
-                            <div class="media">
-                                <div class="media-left">
-                                    <figure class="image is-48x48">
-                                        <img src="${husbandos[index].image}">
-                                    </figure>
-                                </div>
-                                <div class="media-content">
-                                    <p class="title is-4">${rank + 1} - ${husbandos[index].name}</p>
-                                    <p class="subtitle is-6">${husbandos[index].sourceVisualNovel}</p>
-                                </div>
-                            </div>
-                            <p></p>
-                        </div>
-                    `
+        /**
+         * This function checks all the husbandos to see if they're available.
+         * If they're not available, it adds their index to the nonAvailableHusbandos set.
+         */
+        function updateHusbandoAvailability() {
+            for (let i = 0; i < husbandoMatrix.length; i++) {
+                let isHusbandoAvailable = false
+                for (let j = 0; j < husbandoMatrix.length; j++) {
+                    isHusbandoAvailable = husbandoMatrix[i][j] === -1
+                    if (isHusbandoAvailable) {
+                        break
+                    }
                 }
 
-                document.getElementById("husbando-result").innerHTML = rankedHusbandosHtml
+                if (!isHusbandoAvailable) {
+                    nonAvailableHusbandos.add(i)
+                }
+            }
+        }
+
+        /**
+         * This function applies the transitive property that if A > B and B > C
+         * then A > C. It prevents the user from having to do redundant choices.
+         *
+         * It works like a graph. For every husbando (node), start a search (can be DFS or BFS) starting from him.
+         * After the search finishes, it will return a list of connected nodes. We can then connect the current husbando
+         * directly to the other nodes. That's assuming that if you consider that A > B, then it means that there's an
+         * edge A -> B, and it's represented in the husbandoMatrix as a 1.
+         */
+        function updateHusbandoTransitivity() {
+            for (let i = 0; i < husbandoMatrix.length; i++) {
+                // Iterative DFS implementation for every husbando
+
+                let stack = [i]
+                let discovered = new Set()
+
+                while (stack.length !== 0) {
+                    const husbandoIndex = stack.pop()
+                    if (!discovered.has(husbandoIndex)) {
+                        discovered.add(husbandoIndex)
+
+                        const currentHusbando = husbandoMatrix[husbandoIndex]
+
+                        for (let adjacentHusbando = 0; adjacentHusbando < currentHusbando.length; adjacentHusbando++) {
+                            const isAdjacent = currentHusbando[adjacentHusbando] === 1
+                            if (isAdjacent) {
+                                stack.push(adjacentHusbando)
+                            }
+                        }
+                    }
+                }
+
+                // discovered is a set of all the husbandos that are ranked lower
+                // than the current husbando of index i. we need to update the
+                // husbandoMatrix to reflect this
+
+                for (const otherHusbando of discovered) {
+                    husbandoMatrix[i][otherHusbando] = 1
+                    husbandoMatrix[otherHusbando][i] = 0
+                }
             }
         }
 
@@ -285,6 +300,44 @@
             document.getElementById("husbando-rhs-title").textContent = `${husbandos[husbandoIndexRhs].name} (${husbandos[husbandoIndexRhs].sourceVisualNovel})`
             document.getElementById("husbando-rhs-image").src = husbandos[husbandoIndexRhs].image
             document.getElementById("husbando-rhs-image").alt = husbandos[husbandoIndexRhs].name
+        }
+
+        function showResults() {
+            console.log("Ranking finished")
+            document.getElementById("husbando-app").style.display = "none"
+
+            let rankedHusbandos = husbandoMatrix.map((husbando, index) => [husbando.reduce((a, b) => a + b, 0), index])
+
+            rankedHusbandos.sort(([rank1, index1], [rank2, index2]) => rank1 < rank2)
+
+            rankedHusbandos = rankedHusbandos.map(([rank, index]) => index)
+
+            let rankedHusbandosHtml = `
+                <div class="box has-text-centered">
+                    <p class="title">Results</p>
+                </div>
+            `
+
+            for (const [rank, index] of rankedHusbandos.entries()) {
+                rankedHusbandosHtml += `
+                    <div class="box">
+                        <div class="media">
+                            <div class="media-left">
+                                <figure class="image is-48x48">
+                                    <img src="${husbandos[index].image}">
+                                </figure>
+                            </div>
+                            <div class="media-content">
+                                <p class="title is-4">${rank + 1} - ${husbandos[index].name}</p>
+                                <p class="subtitle is-6">${husbandos[index].sourceVisualNovel}</p>
+                            </div>
+                        </div>
+                        <p></p>
+                    </div>
+                `
+            }
+
+            document.getElementById("husbando-result").innerHTML = rankedHusbandosHtml
         }
 
         function shuffleArray(a) {
