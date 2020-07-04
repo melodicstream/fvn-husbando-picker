@@ -252,23 +252,42 @@
         }
 
         function randomizeHusbandos() {
+            // This chooses a random available husbando first,
+            // and then choses another random available husbando considering the
+            // first chosen husbando
+
             const husbandoAmount = husbandos.length
 
-            const husbandoLhs = husbandoCardIndexes[0]
-            const husbandoRhs = husbandoCardIndexes[1]
-
-            // This is all the non available husbandos, plus the two currently selected husbandos
-            const allNonAvailableHusbandos = new Set([...nonAvailableHusbandos]).add(husbandoLhs).add(husbandoRhs)
-
-            const availableHusbandos = Array.from(Array(husbandoAmount).keys())
+            let availableHusbandos = Array.from(Array(husbandoAmount).keys())
                 // Subtract non available husbandos from all the husbandos
-                .filter(x => !allNonAvailableHusbandos.has(x))
+                .filter(x => !nonAvailableHusbandos.has(x))
 
             shuffleArray(availableHusbandos)
 
-            if (availableHusbandos.length > 1) {
+            if (availableHusbandos.length > 0) {
                 husbandoCardIndexes[0] = availableHusbandos[0]
-                husbandoCardIndexes[1] = availableHusbandos[1]
+            } else {
+                console.log("No more available husbandos left")
+                return
+            }
+
+            // This is all the non available husbandos, plus the other selected husbando
+            const allNonAvailableHusbandos = new Set([...nonAvailableHusbandos])
+                .add(husbandoCardIndexes[0])
+
+            availableHusbandos = Array.from(Array(husbandoAmount).keys())
+                // Subtract non available husbandos from all the husbandos
+                .filter(x => !allNonAvailableHusbandos.has(x))
+                // Subtract any husbandos that have been paired with the other side
+                .filter(x => husbandoMatrix[x][husbandoCardIndexes[0]] === -1)
+
+            shuffleArray(availableHusbandos)
+
+            if (availableHusbandos.length > 0) {
+                husbandoCardIndexes[1] = availableHusbandos[0]
+            } else {
+                console.log("This shouldn't happen")
+                return
             }
 
             updateHusbandoCards()
