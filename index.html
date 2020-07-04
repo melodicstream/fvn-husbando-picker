@@ -175,14 +175,14 @@
          */
         function updateHusbandosState(side) {
 
-            updateHusbandoAvailability()
-
             updateHusbandoTransitivity()
+
+            updateHusbandoAvailability()
 
             const areThereHusbandosLeft = nonAvailableHusbandos.size !== husbandos.length
 
             if (areThereHusbandosLeft) {
-                randomizeHusbandoIndex(side)
+                randomizeHusbandos()
             } else {
                 showResults()
             }
@@ -251,42 +251,27 @@
             }
         }
 
-        function randomizeHusbandoIndex(side) {
-            // Randomize current side first, then check to see if the other side
-            // has an available husbando. If no, then randomize the other side.
-            randomizeHusbandoSide(side)
-
-            const husbandoOtherSide = husbandoCardIndexes[1 - side]
-
-            const husbandoIsAvailable = !nonAvailableHusbandos.has(husbandoOtherSide)
-
-            if (!husbandoIsAvailable) {
-                randomizeHusbandoSide(1 - side)
-            }
-
-            updateHusbandoCards()
-        }
-
-        function randomizeHusbandoSide(side) {
+        function randomizeHusbandos() {
             const husbandoAmount = husbandos.length
 
-            const oldIndex = husbandoCardIndexes[side]
-            const otherIndex = husbandoCardIndexes[1 - side]
+            const husbandoLhs = husbandoCardIndexes[0]
+            const husbandoRhs = husbandoCardIndexes[1]
 
             // This is all the non available husbandos, plus the two currently selected husbandos
-            const allNonAvailableHusbandos = new Set([...nonAvailableHusbandos]).add(oldIndex).add(otherIndex)
+            const allNonAvailableHusbandos = new Set([...nonAvailableHusbandos]).add(husbandoLhs).add(husbandoRhs)
 
             const availableHusbandos = Array.from(Array(husbandoAmount).keys())
                 // Subtract non available husbandos from all the husbandos
                 .filter(x => !allNonAvailableHusbandos.has(x))
-                // Subtract any husbandos that have been paired with the otherIndex
-                .filter(x => husbandoMatrix[x][otherIndex] === -1)
 
             shuffleArray(availableHusbandos)
 
-            if (availableHusbandos.length !== 0) {
-                husbandoCardIndexes[side] = availableHusbandos[0]
+            if (availableHusbandos.length > 1) {
+                husbandoCardIndexes[0] = availableHusbandos[0]
+                husbandoCardIndexes[1] = availableHusbandos[1]
             }
+
+            updateHusbandoCards()
         }
 
         function updateHusbandoCards() {
@@ -306,30 +291,49 @@
             console.log("Ranking finished")
             document.getElementById("husbando-app").style.display = "none"
 
-            let rankedHusbandos = husbandoMatrix.map((husbando, index) => [husbando.reduce((a, b) => a + b, 0), index])
+            let sortedHusbandos = [...husbandos]
 
-            rankedHusbandos.sort(([rank1, index1], [rank2, index2]) => rank1 < rank2)
+            for (let i = 0; i < husbandoMatrix.length; i++) {
+                const score = husbandoMatrix[i].reduce((a, b) => a + b, 0)
+                sortedHusbandos[i].score = score
+            }
 
-            rankedHusbandos = rankedHusbandos.map(([rank, index]) => index)
+            sortedHusbandos.sort((husbandoLhs, husbandoRhs) => husbandoLhs.score < husbandoRhs.score)
+
+            let rank = 1
+            for (let i = 0; i < sortedHusbandos.length; i++) {
+                const currentHusbando = sortedHusbandos[i]
+
+                currentHusbando.rank = rank
+
+                const nextHusbandoIndex = i + 1
+                if (nextHusbandoIndex < sortedHusbandos.length) {
+                    const nextHusbando = sortedHusbandos[nextHusbandoIndex]
+
+                    if (currentHusbando.score !== nextHusbando.score) {
+                        rank++
+                    }
+                }
+            }
 
             let rankedHusbandosHtml = `
-                <div class="box has-text-centered">
+                <div class="box">
                     <p class="title">Results</p>
                 </div>
             `
 
-            for (const [rank, index] of rankedHusbandos.entries()) {
+            for (const husbando of sortedHusbandos) {
                 rankedHusbandosHtml += `
                     <div class="box">
                         <div class="media">
                             <div class="media-left">
                                 <figure class="image is-48x48">
-                                    <img src="${husbandos[index].image}">
+                                    <img src="${husbando.image}">
                                 </figure>
                             </div>
                             <div class="media-content">
-                                <p class="title is-4">${rank + 1} - ${husbandos[index].name}</p>
-                                <p class="subtitle is-6">${husbandos[index].sourceVisualNovel}</p>
+                                <p class="title is-4">${husbando.rank} - ${husbando.name} (${husbando.sourceVisualNovel})</p>
+                                <p class="subtitle is-6">Score: ${husbando.score}</p>
                             </div>
                         </div>
                         <p></p>
@@ -350,9 +354,7 @@
 
         window.onload = () => {
             husbandoMatrix = initializeHusbandoMatrix()
-
-            randomizeHusbandoIndex(0)
-            randomizeHusbandoIndex(1)
+            randomizeHusbandos()
         }
 
     </script>
