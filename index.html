@@ -9,25 +9,19 @@
 </head>
 
 <body class="has-background-grey-darker">
-    <nav class="navbar has-background-info-dark" role="navigation" aria-label="main navigation">
-        <div class="navbar-brand">
-            <h1 class="navbar-item has-text-white-bis">Furry Visual Novel Husbando Picker</h1>
-        </div>
-    </nav>
-
     <section class="section">
         <div class="container">
             <div class="box">
                 <p>
                     Welcome to the Furry Visual Novel Husbando Picker! The way this works is that you're presented with
                     two characters from Furry Visual Novels at once. You must decide which one of the two you like the
-                    most. This will go on until you're rated all the characters. Once that is done, you'll be able to
+                    most. This will go on until you've rated all the characters. Once that is done, you'll be able to
                     see your ranking of husbandos, with the top one being the one that you love the most. Refresh the
                     page to try again if you'd like.
                 </p>
             </div>
         </div>
-        <br/>
+        <br />
         <div class="container" id="husbando-app">
             <div class="columns">
                 <div class="column is-5">
@@ -39,9 +33,10 @@
                         </div>
                         <div class="card-content">
                             <div class="content">
-                                <p class="title is-4" id="husbando-lhs-title"></p>
-                                <button class="button" onclick="onLike(0)">I like this one more!</button>
-                                <button class="button" onclick="onDontKnow(0)">I don't know this one!</button>
+                                <p class="title is-4 has-text-centered" id="husbando-lhs-title"></p>
+                                <button class="button is-info is-medium is-fullwidth" onclick="onLike(0)">I like this one more!</button>
+                                <br>
+                                <button class="button is-danger is-medium is-fullwidth" onclick="onDontKnow(0)">I don't know this one!</button>
                             </div>
                         </div>
                     </div>
@@ -55,9 +50,10 @@
                         </div>
                         <div class="card-content">
                             <div class="content">
-                                <p class="title is-4" id="husbando-rhs-title"></p>
-                                <button class="button" onclick="onLike(1)">I like this one more!</button>
-                                <button class="button" onclick="onDontKnow(1)">I don't know this one!</button>
+                                <p class="title is-4 has-text-centered" id="husbando-rhs-title"></p>
+                                <button class="button is-info is-medium is-fullwidth" onclick="onLike(1)">I like this one more!</button>
+                                <br>
+                                <button class="button is-danger is-medium is-fullwidth" onclick="onDontKnow(1)">I don't know this one!</button>
                             </div>
                         </div>
                     </div>
